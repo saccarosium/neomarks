@@ -115,7 +115,8 @@ local function ui_save_items()
     local mark = mark_get(filepath)
     res[#res + 1] = mark or mark_new(filepath)
   end
-  Marks = res
+  Storage[uv.cwd()] = res
+  Marks = storage_get()
 end
 
 local function ui_select_item(action)
