@@ -198,9 +198,11 @@ end
 
 local M = {}
 
-function M.setup()
+function M.setup(opts)
   storage_load()
   Marks = storage_get()
+
+  Options = vim.tbl_deep_extend("force", Options, opts or {})
 
   local group = vim.api.nvim_create_augroup("MiniPoon", {})
 
