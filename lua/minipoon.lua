@@ -1,10 +1,18 @@
 local uv = vim.loop
 
 Options = {
-  storefile = vim.fn.stdpath('data') .. "/minipoon.json"
+  storagefile = vim.fn.stdpath('data') .. "/minipoon.json",
+  ui = {
+    width = 60,
+    height = 10,
+    border = "rounded",
+    title = "MiniPoon",
+    title_pos = "center",
+  }
 }
 
-Store = {}
+Storage = {}
+Marks = {}
 UI = {}
 
 -- UTILS: {{{
@@ -21,16 +29,16 @@ end
 -- }}}
 -- STORAGE: {{{
 
-local function store_get()
+local function storage_get()
   local cwd = uv.cwd()
-  Store[cwd] = Store[cwd] or {}
-  return Store[cwd]
+  Storage[cwd] = Storage[cwd] or {}
+  return Storage[cwd]
 end
 
-local function store_save()
-  local file = uv.fs_open(Options.storefile, "w", 438)
+local function storage_save()
+  local file = uv.fs_open(Options.storagefile, "w", 438)
   if file then
-    local ok, result = pcall(vim.json.encode, Store)
+    local ok, result = pcall(vim.json.encode, Storage)
     if not ok then
       error(result)
     end
@@ -39,14 +47,14 @@ local function store_save()
   end
 end
 
-local function store_load()
-  local file = uv.fs_open(Options.storefile, "r", 438)
+local function storage_load()
+  local file = uv.fs_open(Options.storagefile, "r", 438)
   if file then
     local stat = assert(uv.fs_fstat(file))
     local data = assert(uv.fs_read(file, stat.size, 0))
     assert(uv.fs_close(file))
     local ok, result = pcall(vim.json.decode, data)
-    Store = ok and result or {}
+    Storage = ok and result or {}
   end
 end
 
@@ -62,7 +70,7 @@ end
 
 local function mark_get(filepath)
   filepath = filepath or vim.api.nvim_buf_get_name(0)
-  for _, mark in ipairs(store_get()) do
+  for _, mark in ipairs(Marks) do
     if mark.filepath == filepath then
       return mark
     end
@@ -81,11 +89,10 @@ local function mark_update_pos(mark)
   mark.pos = vim.api.nvim_win_get_cursor(0)
 end
 
-local function mark_follow(mark)
-  vim.cmd.edit(mark.filepath)
+local function mark_follow(mark, action)
+  vim.cmd((action or "edit") .. " " .. mark.filepath)
   vim.api.nvim_win_set_cursor(0, mark.pos)
 end
-
 
 -- }}}
 -- UI: {{{
@@ -108,20 +115,16 @@ local function ui_save_items()
     local mark = mark_get(filepath)
     res[#res + 1] = mark or mark_new(filepath)
   end
-  Store[uv.cwd()] = res
+  Marks = res
 end
 
-local function ui_select_item()
+local function ui_select_item(action)
   local line = vim.api.nvim_get_current_line()
   local filepath = make_absolute(line)
   local mark = mark_get(filepath)
   if mark then
-    mark_follow(mark)
+    mark_follow(mark, action)
   end
-end
-
-local function is_ui_open()
-  return not vim.tbl_isempty(UI)
 end
 
 local function ui_close()
@@ -133,14 +136,14 @@ end
 local function ui_create()
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, {
-    title = "minipoon",
-    title_pos = "center",
+    title = Options.ui.title,
+    title_pos = Options.ui.title_pos,
     relative = "editor",
-    border = "rounded",
-    width = 60,
-    height = 10,
-    row = math.floor(((vim.o.lines - 10) / 2) - 5),
-    col = math.floor((vim.o.columns - 60) / 2),
+    border = Options.ui.border,
+    width = Options.ui.width,
+    height = Options.ui.height,
+    row = math.floor(((vim.o.lines - Options.ui.height) / 2) - 1),
+    col = math.floor((vim.o.columns - Options.ui.width) / 2),
   })
 
   vim.api.nvim_win_set_option(win, "winhl", "Normal:Normal")
@@ -148,24 +151,44 @@ local function ui_create()
   vim.api.nvim_buf_set_option(buf, "filetype", "minipoon")
   vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
 
+  -- Keys that close the UI
   for _, k in ipairs({ "q", "<C-c>", "<ESC>" }) do
     vim.keymap.set('n', k, ui_close, { buffer = buf })
   end
 
-  vim.keymap.set('n', '<CR>', ui_select_item, { buffer = buf })
+  -- Disabled Keys
+  for _, k in ipairs({ "i", "I", "c", "C", "D", "v", "s", "S" }) do
+    vim.keymap.set('n', k, [[<nop>]], { buffer = buf })
+  end
 
-  vim.api.nvim_create_autocmd("BufLeave", { once = true, callback = ui_close, })
+  -- Keys that select item under the cursor
+  for k, a in pairs({
+    ["<CR>"] = "edit",
+    ["e"] = "edit",
+    ["o"] = "split",
+    ["O"] = "split",
+    ["a"] = "vsplit",
+    ["A"] = "vsplit",
+  })
+  do
+    vim.keymap.set('n', k, function() ui_select_item(a) end, { buffer = buf })
+  end
+
+  vim.api.nvim_create_autocmd("BufLeave", {
+    once = true,
+    callback = ui_close,
+  })
 
   UI = {
     buf = buf,
     win = win,
+    open = true
   }
 end
 
 local function ui_populate()
-  local store = store_get()
   local filepaths = {}
-  for _, mark in ipairs(store) do
+  for _, mark in ipairs(Marks) do
     table.insert(filepaths, make_relative(mark.filepath))
   end
   vim.api.nvim_buf_set_lines(UI.buf, 0, -1, false, filepaths)
@@ -176,41 +199,46 @@ end
 local M = {}
 
 function M.setup()
-  store_load()
-  vim.api.nvim_create_autocmd("BufLeave", {
+  storage_load()
+  Marks = storage_get()
+
+  local group = vim.api.nvim_create_augroup("MiniPoon", {})
+
+  vim.api.nvim_create_autocmd("DirChanged", {
+    group = group,
     callback = function()
-      local mark = mark_get()
-      if mark then
-        mark_update_pos(mark)
-      end
-      store_save()
+      Marks = storage_get()
+    end
+  })
+
+  vim.api.nvim_create_autocmd("BufLeave", {
+    group = group,
+    callback = function()
+      mark_update_current_pos()
+      storage_save()
     end
   })
 end
 
 function M.mark_file()
-  local store = store_get()
   local mark = mark_get()
   if not mark then
-    table.insert(store, mark_new())
-  else
-    mark_update_pos(mark)
+    table.insert(Marks, mark_new())
   end
 end
 
 function M.ui_toogle()
-  if is_ui_open() then
+  if UI.open then
     ui_close()
-    return
+  else
+    ui_create()
+    ui_populate()
   end
-  ui_create()
-  ui_populate()
 end
 
 function M.jump_to(idx)
   mark_update_current_pos()
-  local store = store_get()
-  local mark = store[idx]
+  local mark = Marks[idx]
   if mark then
     mark_follow(mark)
   end
