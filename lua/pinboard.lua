@@ -1,12 +1,12 @@
 local uv = vim.loop
 
 Options = {
-  storagefile = vim.fn.stdpath('data') .. "/minipoon.json",
+  storagefile = vim.fn.stdpath('data') .. "/pinboard.json",
   ui = {
     width = 60,
     height = 10,
     border = "rounded",
-    title = "MiniPoon",
+    title = "Pinned Files",
     title_pos = "center",
   }
 }
@@ -148,8 +148,8 @@ local function ui_create()
   })
 
   vim.api.nvim_win_set_option(win, "winhl", "Normal:Normal")
-  vim.api.nvim_buf_set_name(buf, "minipoon-menu")
-  vim.api.nvim_buf_set_option(buf, "filetype", "minipoon")
+  vim.api.nvim_buf_set_name(buf, "pinned-files")
+  vim.api.nvim_buf_set_option(buf, "filetype", "pinboard")
   vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
 
   -- Keys that close the UI
@@ -205,7 +205,7 @@ function M.setup(opts)
 
   Options = vim.tbl_deep_extend("force", Options, opts or {})
 
-  local group = vim.api.nvim_create_augroup("MiniPoon", {})
+  local group = vim.api.nvim_create_augroup("PinBoard", {})
 
   vim.api.nvim_create_autocmd("DirChanged", {
     group = group,

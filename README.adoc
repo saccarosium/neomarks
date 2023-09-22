@@ -1,4 +1,4 @@
-= MiniPoon
+= PinBoard
 
 [IMPORTANT]
 All the credits for the idea for the plugin goes to
@@ -22,14 +22,14 @@ of features to be usable and use only neovim standard functions.
 Using your favorite Package manager:
 
 ....
-"saccarosium/minipoon.nvim"
+"saccarosium/pinboard.nvim"
 ....
 
 Put it directly in your config:
 
 [,sh]
 ----
-curl https://raw.githubusercontent.com/saccarosium/minipoon.nvim/main/lua/minipoon.lua -o "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim/lua/minipoon.lua
+curl https://raw.githubusercontent.com/saccarosium/pinboard.nvim/main/lua/pinboard.lua -o "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim/lua/pinboard.lua
 ----
 
 === Setup
@@ -38,10 +38,10 @@ Call the `setup` function (the following are the defaults):
 
 [,lua]
 ----
-require("minipoon").setup({
-  storagefile = vim.fn.stdpath('data') .. "/minipoon.json",
+require("pinboard").setup({
+  storagefile = vim.fn.stdpath('data') .. "/pinboard.json",
   ui = {
-    title = "MiniPoon",
+    title = "Pinned Files",
     title_pos = "center",
     border = "rounded",
     width = 60,
@@ -54,7 +54,7 @@ Now you can remap as you wish the following functions:
 
 [,lua]
 ----
-require("minipoon").mark_file() -- Mark file
-require("minipoon").ui_toogle() -- Toggle the UI
-require("minipoon").jump_to(<number>) -- Jump to specific index
+require("pinboard").mark_file() -- Mark file
+require("pinboard").ui_toogle() -- Toggle the UI
+require("pinboard").jump_to(<number>) -- Jump to specific index
 ----
