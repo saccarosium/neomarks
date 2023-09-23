@@ -6,7 +6,7 @@ Options = {
     width = 60,
     height = 10,
     border = "rounded",
-    title = "Pinned Files",
+    title = "Neomarks",
     title_pos = "center",
   }
 }

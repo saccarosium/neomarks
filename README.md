@@ -1,11 +1,15 @@
-# PinBoard
-
 > **Important**
 > All the credits for the idea for the plugin goes to [ThePrimegean][1] and his
 > plugin [harpoon][2]. I highly suggest you to watch is [vimconf video][3] to
 > understand the usage of this plugin.
 
+<div align='center'>
+
+# Neomarks
+
 A new take on vim marks.
+
+</div>
 
 ## Why
 
@@ -20,13 +24,13 @@ set of features to be usable and use only neovim standard functions.
 Using your favorite Package manager:
 
 ```
-"saccarosium/pinboard.nvim"
+"saccarosium/neomarks"
 ```
 
 Put it directly in your config:
 
 ```sh
-curl https://raw.githubusercontent.com/saccarosium/pinboard.nvim/main/lua/pinboard.lua -o "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim/lua/pinboard.lua
+curl https://raw.githubusercontent.com/saccarosium/neomarks/main/lua/neomarks.lua -o "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim/lua/neomarks.lua
 ```
 
 ### Setup
@@ -34,10 +38,10 @@ curl https://raw.githubusercontent.com/saccarosium/pinboard.nvim/main/lua/pinboa
 Call the `setup` function (the following are the defaults):
 
 ```lua
-require("pinboard").setup({
-  storagefile = vim.fn.stdpath('data') .. "/pinboard.json",
+require("neomarks").setup({
+  storagefile = vim.fn.stdpath('data') .. "/marks.json",
   ui = {
-    title = "Pinned Files",
+    title = "Neomarks",
     title_pos = "center",
     border = "rounded",
     width = 60,
@@ -49,9 +53,9 @@ require("pinboard").setup({
 Now you can remap as you wish the following functions:
 
 ```lua
-require("pinboard").mark_file() -- Mark file
-require("pinboard").ui_toogle() -- Toggle the UI
-require("pinboard").jump_to(<number>) -- Jump to specific index
+require("neomarks").mark_file() -- Mark file
+require("neomarks").ui_toogle() -- Toggle the UI
+require("neomarks").jump_to(<number>) -- Jump to specific index
 ```
 
 ## UI Mappings
