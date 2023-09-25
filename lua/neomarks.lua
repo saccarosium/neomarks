@@ -2,7 +2,7 @@ local uv = vim.loop
 local autocmd = vim.api.nvim_create_autocmd
 
 Options = {
-  storagefile = vim.fn.stdpath('data') .. "/pinboard.json",
+  storagefile = vim.fn.stdpath('data') .. "/marks.json",
   ui = {
     width = 60,
     height = 10,
@@ -92,15 +92,15 @@ local function mark_get(file)
   return nil
 end
 
+local function mark_update_pos(mark)
+  mark.pos = vim.api.nvim_win_get_cursor(0)
+end
+
 local function mark_update_current_pos()
   local mark = mark_get()
   if mark then
-    mark.pos = vim.api.nvim_win_get_cursor(0)
+    mark_update_pos(mark)
   end
-end
-
-local function mark_update_pos(mark)
-  mark.pos = vim.api.nvim_win_get_cursor(0)
 end
 
 local function mark_follow(mark, action)
