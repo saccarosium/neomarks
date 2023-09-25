@@ -1,4 +1,5 @@
 local uv = vim.loop
+local autocmd = vim.api.nvim_create_autocmd
 
 Options = {
   storagefile = vim.fn.stdpath('data') .. "/pinboard.json",
@@ -174,10 +175,7 @@ local function ui_create()
     vim.keymap.set('n', k, function() ui_select_item(a) end, { buffer = buf })
   end
 
-  vim.api.nvim_create_autocmd("BufLeave", {
-    once = true,
-    callback = ui_close,
-  })
+  autocmd("BufLeave", { once = true, callback = ui_close, })
 
   UI = {
     buf = buf,
@@ -201,25 +199,11 @@ local M = {}
 function M.setup(opts)
   storage_load()
   Marks = storage_get()
-
   Options = vim.tbl_deep_extend("force", Options, opts or {})
-
-  local group = vim.api.nvim_create_augroup("PinBoard", {})
-
-  vim.api.nvim_create_autocmd("DirChanged", {
-    group = group,
-    callback = function()
-      Marks = storage_get()
-    end
-  })
-
-  vim.api.nvim_create_autocmd("BufLeave", {
-    group = group,
-    callback = function()
-      mark_update_current_pos()
-      storage_save()
-    end
-  })
+  local group = vim.api.nvim_create_augroup("Neomarks", {})
+  autocmd("DirChanged", { group = group, callback = function() Marks = storage_get() end })
+  autocmd("BufLeave", { group = group, callback = mark_update_current_pos, })
+  autocmd("VimLeave", { group = group, callback = storage_save, })
 end
 
 function M.mark_file()
