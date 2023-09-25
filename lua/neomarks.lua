@@ -38,7 +38,16 @@ local function storage_get()
   return Storage[cwd]
 end
 
+local function storage_clean()
+  for k, v in pairs(Storage) do
+    if vim.tbl_isempty(v) then
+      Storage[k] = nil
+    end
+  end
+end
+
 local function storage_save()
+  storage_clean()
   local file = uv.fs_open(Options.storagefile, "w", 438)
   if file then
     local ok, result = pcall(vim.json.encode, Storage)
@@ -58,6 +67,7 @@ local function storage_load()
     assert(uv.fs_close(file))
     local ok, result = pcall(vim.json.decode, data)
     Storage = ok and result or {}
+    storage_clean()
   end
 end
 
