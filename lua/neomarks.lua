@@ -182,7 +182,7 @@ local function ui_create()
   end
 
   -- Disabled Keys
-  for _, k in ipairs({ "i", "I", "c", "C", "D", "v", "s", "S" }) do
+  for _, k in ipairs({ "i", "I", "c", "C", "D", "S" }) do
     vim.keymap.set('n', k, [[<nop>]], { buffer = buf })
   end
 
@@ -190,10 +190,12 @@ local function ui_create()
   for k, a in pairs({
     ["<CR>"] = "edit",
     ["e"] = "edit",
-    ["o"] = "split",
     ["O"] = "split",
-    ["a"] = "vsplit",
+    ["o"] = "split",
+    ["s"] = "split",
     ["A"] = "vsplit",
+    ["a"] = "vsplit",
+    ["v"] = "vsplit",
   })
   do
     vim.keymap.set('n', k, function() ui_select_item(a) end, { buffer = buf })
