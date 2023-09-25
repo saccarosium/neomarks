@@ -63,15 +63,15 @@ end
 
 local function mark_new(filepath)
   return {
-    filepath = filepath or vim.api.nvim_buf_get_name(0),
+    file = file or vim.api.nvim_buf_get_name(0),
     pos = vim.api.nvim_win_get_cursor(0),
   }
 end
 
-local function mark_get(filepath)
-  filepath = filepath or vim.api.nvim_buf_get_name(0)
+local function mark_get(file)
+  file = file or vim.api.nvim_buf_get_name(0)
   for _, mark in ipairs(Marks) do
-    if mark.filepath == filepath then
+    if mark.file == file then
       return mark
     end
   end
@@ -90,7 +90,6 @@ local function mark_update_pos(mark)
 end
 
 local function mark_follow(mark, action)
-  vim.cmd((action or "edit") .. " " .. mark.filepath)
   vim.api.nvim_win_set_cursor(0, mark.pos)
 end
 
@@ -111,9 +110,9 @@ end
 
 local function ui_save_items()
   local res = {}
-  for _, filepath in ipairs(ui_get_items()) do
-    local mark = mark_get(filepath)
-    res[#res + 1] = mark or mark_new(filepath)
+  for _, file in ipairs(ui_get_items()) do
+    local mark = mark_get(file)
+    res[#res + 1] = mark or mark_new(file)
   end
   Storage[uv.cwd()] = res
   Marks = storage_get()
@@ -121,10 +120,10 @@ end
 
 local function ui_select_item(action)
   local line = vim.api.nvim_get_current_line()
-  local filepath = make_absolute(line)
-  local mark = mark_get(filepath)
-  if mark then
-    mark_follow(mark, action)
+  local file = make_absolute(line)
+  local mark = mark_get(file)
+  if not mark then
+    return
   end
 end
 
@@ -148,8 +147,8 @@ local function ui_create()
   })
 
   vim.api.nvim_win_set_option(win, "winhl", "Normal:Normal")
-  vim.api.nvim_buf_set_name(buf, "pinned-files")
-  vim.api.nvim_buf_set_option(buf, "filetype", "pinboard")
+  vim.api.nvim_buf_set_name(buf, "marked-files")
+  vim.api.nvim_buf_set_option(buf, "filetype", "neomarks")
   vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
 
   -- Keys that close the UI
@@ -188,11 +187,11 @@ local function ui_create()
 end
 
 local function ui_populate()
-  local filepaths = {}
+  local files = {}
   for _, mark in ipairs(Marks) do
-    table.insert(filepaths, make_relative(mark.filepath))
+    table.insert(files, make_relative(mark.file))
   end
-  vim.api.nvim_buf_set_lines(UI.buf, 0, -1, false, filepaths)
+  vim.api.nvim_buf_set_lines(UI.buf, 0, -1, false, files)
 end
 
 -- }}}
