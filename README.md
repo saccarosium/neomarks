@@ -63,8 +63,8 @@ require("neomarks").jump_to(<number>) -- Jump to specific index
 | Keys | Action |
 | :--- | :----- |
 | `<CR>`, `e` | edit file under the cursor |
-| `o`, `O` | edit file under the cursor in a horizontal split |
-| `a`, `A` | edit file under the cursor in a vertical split |
+| `s`, `o`, `O` | edit file under the cursor in a horizontal split |
+| `v`, `a`, `A` | edit file under the cursor in a vertical split |
 | `<C-c>`, `<ESC>`, `q` | close UI |
 
 
