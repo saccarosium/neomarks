@@ -110,7 +110,7 @@ local function mark_follow(mark, action)
   local buf_name = buf_valid and vim.api.nvim_buf_get_name(mark.buffer)
   if buf_valid and buf_name == mark.file then
     vim.cmd(action or "")
-    vim.api.nvim_set_current_buf(mark.buffer)
+    vim.cmd.buffer(mark.buffer)
   else
     vim.cmd((action or "edit") .. " " .. mark.file)
   end
