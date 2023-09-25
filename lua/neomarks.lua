@@ -19,12 +19,14 @@ UI = {}
 -- UTILS: {{{
 
 local function make_relative(path)
-  path = path:gsub(uv.cwd() .. "/", "")
+  local cwd = uv.cwd() .. "/"
+  path = path:gsub(cwd, "")
   return path
 end
 
 local function make_absolute(path)
-  return uv.cwd() .. '/' .. path
+  local cwd = uv.cwd() .. "/"
+  return cwd .. path
 end
 
 -- }}}
