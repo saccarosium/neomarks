@@ -39,7 +39,7 @@ Call the `setup` function (the following are the defaults):
 
 ```lua
 require("neomarks").setup({
-  storagefile = vim.fn.stdpath('data') .. "/marks.json",
+  storagefile = vim.fn.stdpath('data') .. "/neomarks.json",
   ui = {
     title = "Neomarks",
     title_pos = "center",

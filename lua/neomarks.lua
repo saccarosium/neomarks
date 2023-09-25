@@ -2,7 +2,7 @@ local uv = vim.loop
 local autocmd = vim.api.nvim_create_autocmd
 
 Options = {
-  storagefile = vim.fn.stdpath('data') .. "/marks.json",
+  storagefile = vim.fn.stdpath('data') .. "/neomarks.json",
   ui = {
     width = 60,
     height = 10,
