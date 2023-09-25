@@ -74,9 +74,10 @@ end
 -- }}}
 -- MARK: {{{
 
-local function mark_new(filepath)
+local function mark_new(file)
   return {
     file = file or vim.api.nvim_buf_get_name(0),
+    buffer = vim.api.nvim_get_current_buf(),
     pos = vim.api.nvim_win_get_cursor(0),
   }
 end
@@ -103,6 +104,16 @@ local function mark_update_pos(mark)
 end
 
 local function mark_follow(mark, action)
+  local valid_actions = { "edit", "vsplit", "split", }
+  assert(vim.tbl_contains(valid_actions, action or "edit"))
+  local buf_valid = vim.api.nvim_buf_is_valid(mark.buffer)
+  local buf_name = buf_valid and vim.api.nvim_buf_get_name(mark.buffer)
+  if buf_valid and buf_name == mark.file then
+    vim.cmd(action or "")
+    vim.api.nvim_set_current_buf(mark.buffer)
+  else
+    vim.cmd((action or "edit") .. " " .. mark.file)
+  end
   vim.api.nvim_win_set_cursor(0, mark.pos)
 end
 
@@ -138,6 +149,7 @@ local function ui_select_item(action)
   if not mark then
     return
   end
+  mark_follow(mark, action)
 end
 
 local function ui_close()
