@@ -3,6 +3,9 @@
 > plugin [harpoon][2]. I highly suggest you to watch is [vimconf video][3] to
 > understand the usage of this plugin.
 
+> **Warning**
+> This plugin is not stable. Is expected changes in the API. If you experience bugs open an issue
+
 <div align='center'>
 
 # Neomarks
