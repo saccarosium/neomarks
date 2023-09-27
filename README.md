@@ -14,6 +14,16 @@ A new take on vim marks.
 
 </div>
 
+## Goals
+
+* No dependencies
+* Take advantage of native neovim features
+
+## Non Goals
+
+* Feature compatible with harpoon
+* Support anything other than marking file
+
 ## Why
 
 [Harpoon][2] is great and all but as a lot of features that I don't really need
