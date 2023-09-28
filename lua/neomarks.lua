@@ -29,6 +29,28 @@ local function make_absolute(path)
   return cwd .. path
 end
 
+local function create_float()
+  local buf = vim.api.nvim_create_buf(false, true)
+  local win = vim.api.nvim_open_win(buf, true, {
+    title = Options.ui.title,
+    title_pos = Options.ui.title_pos,
+    relative = "editor",
+    border = Options.ui.border,
+    width = Options.ui.width,
+    height = Options.ui.height,
+    row = math.floor(((vim.o.lines - Options.ui.height) / 2) - 1),
+    col = math.floor((vim.o.columns - Options.ui.width) / 2),
+  })
+
+  vim.api.nvim_win_set_option(win, "winhl", "Normal:Normal")
+  vim.api.nvim_buf_set_option(buf, "filetype", "neomarks")
+  vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
+
+  assert(buf and win, "Couldn't create menu correctly")
+
+  return win, buf
+end
+
 -- }}}
 -- STORAGE: {{{
 
@@ -103,16 +125,13 @@ local function mark_update_current_pos()
   end
 end
 
-local function mark_follow(mark, action)
-  local valid_actions = { "edit", "vsplit", "split", }
-  assert(vim.tbl_contains(valid_actions, action or "edit"))
+local function mark_follow(mark)
   local buf_valid = vim.api.nvim_buf_is_valid(mark.buffer)
   local buf_name = buf_valid and vim.api.nvim_buf_get_name(mark.buffer)
   if buf_valid and buf_name == mark.file then
-    vim.cmd(action or "")
     vim.cmd.buffer(mark.buffer)
   else
-    vim.cmd((action or "edit") .. " " .. mark.file)
+    vim.cmd.edit(mark.file)
   end
   vim.api.nvim_win_set_cursor(0, mark.pos)
 end
@@ -142,14 +161,14 @@ local function ui_save_items()
   Marks = storage_get()
 end
 
-local function ui_select_item(action)
+local function ui_select_item()
   local line = vim.api.nvim_get_current_line()
   local file = make_absolute(line)
   local mark = mark_get(file)
   if not mark then
     return
   end
-  mark_follow(mark, action)
+  mark_follow(mark)
 end
 
 local function ui_close()
@@ -158,47 +177,26 @@ local function ui_close()
   UI = {}
 end
 
-local function ui_create()
-  local buf = vim.api.nvim_create_buf(false, true)
-  local win = vim.api.nvim_open_win(buf, true, {
-    title = Options.ui.title,
-    title_pos = Options.ui.title_pos,
-    relative = "editor",
-    border = Options.ui.border,
-    width = Options.ui.width,
-    height = Options.ui.height,
-    row = math.floor(((vim.o.lines - Options.ui.height) / 2) - 1),
-    col = math.floor((vim.o.columns - Options.ui.width) / 2),
-  })
+local function ui_open()
+  local win, buf = create_float()
 
-  vim.api.nvim_win_set_option(win, "winhl", "Normal:Normal")
-  vim.api.nvim_buf_set_name(buf, "marked-files")
-  vim.api.nvim_buf_set_option(buf, "filetype", "neomarks")
-  vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
-
-  -- Keys that close the UI
-  for _, k in ipairs({ "q", "<C-c>", "<ESC>" }) do
-    vim.keymap.set('n', k, ui_close, { buffer = buf })
-  end
-
-  -- Disabled Keys
-  for _, k in ipairs({ "i", "I", "c", "C", "D", "S" }) do
-    vim.keymap.set('n', k, [[<nop>]], { buffer = buf })
-  end
-
-  -- Keys that select item under the cursor
-  for k, a in pairs({
-    ["<CR>"] = "edit",
-    ["e"] = "edit",
-    ["O"] = "split",
-    ["o"] = "split",
-    ["s"] = "split",
-    ["A"] = "vsplit",
-    ["a"] = "vsplit",
-    ["v"] = "vsplit",
-  })
-  do
-    vim.keymap.set('n', k, function() ui_select_item(a) end, { buffer = buf })
+  for k, v in pairs({
+    ["a"] = [[<nop>]],
+    ["o"] = [[<nop>]],
+    ["i"] = [[<nop>]],
+    ["c"] = [[<nop>]],
+    ["q"] = ui_close,
+    ["<C-c>"] = ui_close,
+    ["<ESC>"] = ui_close,
+    ["<CR>"] = ui_select_item,
+  }) do
+    -- This is done so I can write only the lower case verison of a letter
+    -- and remap also the upper case version.
+    local upper = string.byte(k) - 32
+    vim.keymap.set('n', k, v, { buffer = buf })
+    if upper >= 65 or upper <= 122 then
+      vim.keymap.set('n', string.char(upper), v, { buffer = buf })
+    end
   end
 
   autocmd("BufLeave", { once = true, callback = ui_close, })
@@ -243,7 +241,7 @@ function M.ui_toogle()
   if UI.open then
     ui_close()
   else
-    ui_create()
+    ui_open()
     ui_populate()
   end
 end
