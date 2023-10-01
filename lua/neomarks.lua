@@ -3,7 +3,7 @@ local autocmd = vim.api.nvim_create_autocmd
 
 Options = {
   storagefile = vim.fn.stdpath('data') .. "/neomarks.json",
-  ui = {
+  menu = {
     width = 60,
     height = 10,
     border = "rounded",
@@ -14,7 +14,7 @@ Options = {
 
 Storage = {}
 Marks = {}
-UI = {}
+Menu = nil
 
 -- UTILS: {{{
 
@@ -32,14 +32,14 @@ end
 local function create_float()
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, {
-    title = Options.ui.title,
-    title_pos = Options.ui.title_pos,
+    title = Options.menu.title,
+    title_pos = Options.menu.title_pos,
     relative = "editor",
-    border = Options.ui.border,
-    width = Options.ui.width,
-    height = Options.ui.height,
-    row = math.floor(((vim.o.lines - Options.ui.height) / 2) - 1),
-    col = math.floor((vim.o.columns - Options.ui.width) / 2),
+    border = Options.menu.border,
+    width = Options.menu.width,
+    height = Options.menu.height,
+    row = math.floor(((vim.o.lines - Options.menu.height) / 2) - 1),
+    col = math.floor((vim.o.columns - Options.menu.width) / 2),
   })
 
   vim.api.nvim_win_set_option(win, "winhl", "Normal:Normal")
@@ -60,37 +60,34 @@ local function storage_get()
   return Storage[cwd]
 end
 
-local function storage_clean()
+local function storage_save()
   for k, v in pairs(Storage) do
     if vim.tbl_isempty(v) then
       Storage[k] = nil
     end
   end
-end
-
-local function storage_save()
-  storage_clean()
   local file = uv.fs_open(Options.storagefile, "w", 438)
-  if file then
-    local ok, result = pcall(vim.json.encode, Storage)
-    if not ok then
-      error(result)
-    end
-    assert(uv.fs_write(file, result))
-    assert(uv.fs_close(file))
+  if not file then
+    error("Couldn't save to storagefile")
   end
+  local ok, result = pcall(vim.json.encode, Storage)
+  if not ok then
+    error(result)
+  end
+  assert(uv.fs_write(file, result))
+  assert(uv.fs_close(file))
 end
 
 local function storage_load()
   local file = uv.fs_open(Options.storagefile, "r", 438)
-  if file then
-    local stat = assert(uv.fs_fstat(file))
-    local data = assert(uv.fs_read(file, stat.size, 0))
-    assert(uv.fs_close(file))
-    local ok, result = pcall(vim.json.decode, data)
-    Storage = ok and result or {}
-    storage_clean()
+  if not file then
+    error("Couldn't load storagefile")
   end
+  local stat = assert(uv.fs_fstat(file))
+  local data = assert(uv.fs_read(file, stat.size, 0))
+  assert(uv.fs_close(file))
+  local ok, result = pcall(vim.json.decode, data)
+  Storage = ok and result or {}
 end
 
 -- }}}
@@ -120,12 +117,14 @@ end
 
 local function mark_update_current_pos()
   local mark = mark_get()
-  if mark then
-    mark_update_pos(mark)
+  if not mark then
+    return
   end
+  mark_update_pos(mark)
 end
 
 local function mark_follow(mark)
+  assert(mark, "Mark not valid")
   local buf_valid = vim.api.nvim_buf_is_valid(mark.buffer)
   local buf_name = buf_valid and vim.api.nvim_buf_get_name(mark.buffer)
   if buf_valid and buf_name == mark.file then
@@ -137,10 +136,10 @@ local function mark_follow(mark)
 end
 
 -- }}}
--- UI: {{{
+-- MENU: {{{
 
-local function ui_get_items()
-  local lines = vim.api.nvim_buf_get_lines(UI.buf, 0, -1, true)
+local function menu_get_items()
+  local lines = vim.api.nvim_buf_get_lines(Menu.buf, 0, -1, true)
   for i, line in ipairs(lines) do
     if line == "" or line:gsub("%s", "") == "" then
       table.remove(lines, i)
@@ -151,9 +150,9 @@ local function ui_get_items()
   return lines
 end
 
-local function ui_save_items()
+local function menu_save_items()
   local res = {}
-  for _, file in ipairs(ui_get_items()) do
+  for _, file in ipairs(menu_get_items()) do
     local mark = mark_get(file)
     res[#res + 1] = mark or mark_new(file)
   end
@@ -161,7 +160,7 @@ local function ui_save_items()
   Marks = storage_get()
 end
 
-local function ui_select_item()
+local function menu_select_item()
   local line = vim.api.nvim_get_current_line()
   local file = make_absolute(line)
   local mark = mark_get(file)
@@ -171,13 +170,13 @@ local function ui_select_item()
   mark_follow(mark)
 end
 
-local function ui_close()
-  ui_save_items()
-  vim.api.nvim_win_close(UI.win, true)
-  UI = {}
+local function menu_close()
+  menu_save_items()
+  vim.api.nvim_win_close(Menu.win, true)
+  Menu = nil
 end
 
-local function ui_open()
+local function menu_open()
   local win, buf = create_float()
 
   for k, v in pairs({
@@ -185,10 +184,10 @@ local function ui_open()
     ["o"] = [[<nop>]],
     ["i"] = [[<nop>]],
     ["c"] = [[<nop>]],
-    ["q"] = ui_close,
-    ["<C-c>"] = ui_close,
-    ["<ESC>"] = ui_close,
-    ["<CR>"] = ui_select_item,
+    ["q"] = menu_close,
+    ["<C-c>"] = menu_close,
+    ["<ESC>"] = menu_close,
+    ["<CR>"] = menu_select_item,
   }) do
     -- This is done so I can write only the lower case verison of a letter
     -- and remap also the upper case version.
@@ -199,21 +198,20 @@ local function ui_open()
     end
   end
 
-  autocmd("BufLeave", { once = true, callback = ui_close, })
+  autocmd("BufLeave", { once = true, callback = menu_close, })
 
-  UI = {
+  Menu = {
     buf = buf,
     win = win,
-    open = true
   }
 end
 
-local function ui_populate()
+local function menu_populate()
   local files = {}
   for _, mark in ipairs(Marks) do
     table.insert(files, make_relative(mark.file))
   end
-  vim.api.nvim_buf_set_lines(UI.buf, 0, -1, false, files)
+  vim.api.nvim_buf_set_lines(Menu.buf, 0, -1, false, files)
 end
 
 -- }}}
@@ -232,26 +230,28 @@ end
 
 function M.mark_file()
   local mark = mark_get()
-  if not mark then
-    table.insert(Marks, mark_new())
+  if mark then
+    return
   end
+  table.insert(Marks, mark_new())
 end
 
-function M.ui_toogle()
-  if UI.open then
-    ui_close()
+function M.menu_toogle()
+  if Menu then
+    menu_close()
   else
-    ui_open()
-    ui_populate()
+    menu_open()
+    menu_populate()
   end
 end
 
 function M.jump_to(idx)
   mark_update_current_pos()
   local mark = Marks[idx]
-  if mark then
-    mark_follow(mark)
+  if not mark then
+    return
   end
+  mark_follow(mark)
 end
 
 return M
