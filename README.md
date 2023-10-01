@@ -53,7 +53,7 @@ Call the `setup` function (the following are the defaults):
 ```lua
 require("neomarks").setup({
   storagefile = vim.fn.stdpath('data') .. "/neomarks.json",
-  ui = {
+  menu = {
     title = "Neomarks",
     title_pos = "center",
     border = "rounded",
@@ -67,7 +67,7 @@ Now you can remap as you wish the following functions:
 
 ```lua
 require("neomarks").mark_file() -- Mark file
-require("neomarks").ui_toogle() -- Toggle the UI
+require("neomarks").menu_toogle() -- Toggle the UI
 require("neomarks").jump_to(<number>) -- Jump to specific index
 ```
 
@@ -75,9 +75,7 @@ require("neomarks").jump_to(<number>) -- Jump to specific index
 
 | Keys | Action |
 | :--- | :----- |
-| `<CR>`, `e` | edit file under the cursor |
-| `s`, `o`, `O` | edit file under the cursor in a horizontal split |
-| `v`, `a`, `A` | edit file under the cursor in a vertical split |
+| `<CR>`, `e`, `E` | edit file under the cursor |
 | `<C-c>`, `<ESC>`, `q` | close UI |
 
 
