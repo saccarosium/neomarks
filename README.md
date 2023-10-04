@@ -71,6 +71,11 @@ require("neomarks").menu_toogle() -- Toggle the UI
 require("neomarks").jump_to(<number>) -- Jump to specific index
 ```
 
+## Roadmap
+
+- [ ] Support branch specific marks
+- [ ] Mark specific buffer symbol using tree-sitter
+
 ## UI Mappings
 
 | Keys | Action |
