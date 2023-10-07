@@ -97,7 +97,7 @@ end
 local function storage_load()
   local file = uv.fs_open(Options.storagefile, "r", 438)
   if not file then
-    error("Couldn't load storagefile")
+    return
   end
   local stat = assert(uv.fs_fstat(file))
   local data = assert(uv.fs_read(file, stat.size, 0))
