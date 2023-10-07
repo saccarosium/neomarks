@@ -18,15 +18,31 @@ Menu = nil
 
 -- UTILS: {{{
 
-local function make_relative(path)
-  local cwd = uv.cwd() .. "/"
-  path = path:gsub(cwd, "")
-  return path
+local function path_sep()
+  if jit then
+    local os = string.lower(jit.os)
+    return os ~= "windows" and "/" or "\\"
+  else
+    return package.config:sub(1, 1)
+  end
 end
 
 local function make_absolute(path)
-  local cwd = uv.cwd() .. "/"
-  return cwd .. path
+  local cwd = uv.cwd() .. path_sep()
+  path = cwd .. path
+  return path
+end
+
+local function make_relative(path)
+  local cwd = uv.cwd()
+  if path == cwd then
+    path = "."
+  else
+    if path:sub(1, #cwd) == cwd then
+      path = path:sub(#cwd + 2, -1)
+    end
+  end
+  return path
 end
 
 local function create_float()
