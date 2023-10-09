@@ -67,7 +67,7 @@ Now you can remap as you wish the following functions:
 
 ```lua
 require("neomarks").mark_file() -- Mark file
-require("neomarks").menu_toogle() -- Toggle the UI
+require("neomarks").menu_toggle() -- Toggle the UI
 require("neomarks").jump_to(<number>) -- Jump to specific index
 ```
 

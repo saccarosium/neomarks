@@ -141,7 +141,7 @@ end
 
 local function mark_follow(mark)
   assert(mark, "Mark not valid")
-  local buf_valid = vim.api.nvim_buf_is_valid(mark.buffer)
+  local buf_valid = vim.fn.buflisted(mark.buffer) == 1
   local buf_name = buf_valid and vim.api.nvim_buf_get_name(mark.buffer)
   if buf_valid and buf_name == mark.file then
     vim.cmd.buffer(mark.buffer)
@@ -253,7 +253,7 @@ function M.mark_file()
   table.insert(Marks, mark_new())
 end
 
-function M.menu_toogle()
+function M.menu_toggle()
   if Menu then
     menu_close()
   else
