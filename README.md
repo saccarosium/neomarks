@@ -14,6 +14,17 @@ A new take on vim marks.
 
 </div>
 
+## Table of contents
+
+* [Goals](#goals)
+* [Non Goals](#non-goals)
+* [Why](#why)
+* [Installation](#installation)
+* [Setup](#setup)
+  * [Branch specific marks](#branch-specific-marks)
+* [Roadmap](#roadmap)
+* [UI Mappings](#ui-mappings)
+
 ## Goals
 
 * No opt-out dependencies
