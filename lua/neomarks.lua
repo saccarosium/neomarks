@@ -3,13 +3,14 @@ local autocmd = vim.api.nvim_create_autocmd
 
 Options = {
   storagefile = vim.fn.stdpath('data') .. "/neomarks.json",
+  git_branch = nil,
   menu = {
     width = 60,
     height = 10,
     border = "rounded",
     title = "Neomarks",
     title_pos = "center",
-  }
+  },
 }
 
 Storage = {}
@@ -72,6 +73,9 @@ end
 
 local function storage_get()
   local cwd = uv.cwd()
+  if Options.git_branch then
+    cwd = cwd .. ":" .. Options.git_branch()
+  end
   Storage[cwd] = Storage[cwd] or {}
   return Storage[cwd]
 end
@@ -246,6 +250,9 @@ function M.setup(opts)
 end
 
 function M.mark_file()
+  if Options.git_branch then
+    Marks = storage_get()
+  end
   local mark = mark_get()
   if mark then
     return
@@ -257,12 +264,18 @@ function M.menu_toggle()
   if Menu then
     menu_close()
   else
+    if Options.git_branch then
+      Marks = storage_get()
+    end
     menu_open()
     menu_populate()
   end
 end
 
 function M.jump_to(idx)
+  if Options.git_branch then
+    Marks = storage_get()
+  end
   mark_update_current_pos()
   local mark = Marks[idx]
   if not mark then

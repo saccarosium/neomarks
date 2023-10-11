@@ -16,7 +16,7 @@ A new take on vim marks.
 
 ## Goals
 
-* No dependencies
+* No opt-out dependencies
 * Take advantage of native neovim features
 
 ## Non Goals
@@ -30,9 +30,7 @@ A new take on vim marks.
 and depends on `plenary.nvim`. This plugin focus on minimalism, do the minimum
 set of features to be usable and use only neovim standard functions.
 
-## Quickstart
-
-### Installation
+## Installation
 
 Using your favorite Package manager:
 
@@ -46,7 +44,7 @@ Put it directly in your config:
 curl https://raw.githubusercontent.com/saccarosium/neomarks/main/lua/neomarks.lua -o "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim/lua/neomarks.lua
 ```
 
-### Setup
+## Setup
 
 Call the `setup` function (the following are the defaults):
 
@@ -71,9 +69,22 @@ require("neomarks").menu_toggle() -- Toggle the UI
 require("neomarks").jump_to(<number>) -- Jump to specific index
 ```
 
+### Branch specific marks
+
+> **Note**
+> For enabling branch specific files you need to: or install some sort of git integration plugin, that exposes a function to get the current branch name, or build a function on your own. It is preferable to achive this using a plugin. Some options are: [gitsigns.nvim][4] or [vim-fugitive][5].
+
+To enable the feature you need to pass a function that returns the current branch name.
+
+```lua
+git_branch = vim.fn["FugitiveHead"], -- For vim-fugitive
+git_branch = function() return vim.api.nvim_buf_get_var(0, "gitsigns_head") end, -- For gitsigns.nvim
+git_branch = function() ... end, -- For custom function that returns branch name
+```
+
 ## Roadmap
 
-- [ ] Support branch specific marks
+- [x] Support branch specific marks
 - [ ] Mark specific buffer symbol using tree-sitter
 
 ## UI Mappings
@@ -87,3 +98,5 @@ require("neomarks").jump_to(<number>) -- Jump to specific index
 [1]: https://github.com/ThePrimeagen
 [2]: https://github.com/ThePrimeagen/harpoon
 [3]: https://www.youtube.com/watch?v=Qnos8aApa9g
+[4]: https://github.com/lewis6991/gitsigns.nvim
+[5]: https://github.com/tpope/vim-fugitive
